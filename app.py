@@ -1,9 +1,3 @@
-from flask import Flask, render_template_string, request, jsonify
-
-app = Flask(__name__)
-
-# HTML और CSS फ़्रंटएंड टेम्पलेट
-HTML_STORE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +15,7 @@ HTML_STORE = """
         /* Payment Form Styling */
         .payment-form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; }
         .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 12px; color: #a4b0be; text-transform: uppercase; font-weight: bold; }
+        label { font-size: 11px; color: #a4b0be; text-transform: uppercase; font-weight: bold; }
         input { background: #252532; border: 1px solid #3b3b4f; padding: 12px; border-radius: 6px; color: white; font-size: 14px; outline: none; }
         input:focus { border-color: #ffd757; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -33,14 +27,14 @@ HTML_STORE = """
 </head>
 <body>
 
-    <h1>Premium Shoe Store</h1>
+    <h1>⚡ Premium Shoe Store ⚡</h1>
     <p style="color: #a4b0be;">Direct 2D Card Checkout (No OTP Required)</p>
 
     <div class="store-card">
-        <!-- डमी शू इमेज (Unsplash से) -->
+        <!-- प्रोडक्ट इमेज -->
         <img src="https://unsplash.com" alt="Running Shoes" class="shoe-image">
         <h2>Speed Runner Pro</h2>
-        <div class="price-tag">$149.00</div>
+        <div class="price-tag">$39.99</div>
 
         <!-- 2D Payment Gateway Form -->
         <form id="paymentForm" class="payment-form">
@@ -65,12 +59,11 @@ HTML_STORE = """
                 </div>
             </div>
 
-            <button type="submit" class="checkout-btn">Pay Now $149.00</button>
-            <span class="secure-notice">🔒 Secure 2D API Merchant Server Connection</span>
+            <button type="submit" class="checkout-btn">Pay Now $39.99</button>
+            <span class="secure-notice">🔒 Secure 2D Direct Merchant Connection</span>
         </form>
     </div>
 
-    <!-- AJAX Script से बिना पेज रीलोड किए पेमेंट रिस्पांस दिखाने के लिए -->
     <script>
         document.getElementById('paymentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -80,57 +73,16 @@ HTML_STORE = """
                 number: document.getElementById('cardNumber').value,
                 expiry: document.getElementById('cardExpiry').value,
                 cvv: document.getElementById('cardCvv').value,
-                amount: 149.00
+                amount: 39.99
             };
 
-            // सर्वर के 2D API एंडपॉइंट पर डेटा भेजना
-            const response = await fetch('/process-2d-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            
-            if(result.status === "SUCCESS") {
-                alert(`🎉 Payment Successful!\\nTransaction ID: ${result.transaction_id}\\nStatus: 2D Auth Passed.`);
-            } else {
-                alert(`❌ Payment Failed: ${result.message}`);
+            try {
+                // यहाँ आपके Vercel बैकएंड का URL आएगा, अभी यह डमी सक्सेस दिखाएगा
+                alert("🎉 Payment Successful!\nNo OTP required (2D Merchant Passed).");
+            } catch (err) {
+                alert("❌ Connection Error.");
             }
         });
     </script>
 </body>
 </html>
-"""
-
-@app.route('/')
-def home():
-    return render_template_string(HTML_STORE)
-
-# 2D Payment Gateway API Logic
-@app.route('/process-2d-payment', []'POST'])
-def process_payment():
-    data = request.get_json()
-    
-    card_number = data.get('number', '').replace(' ', '')
-    cvv = data.get('cvv', '')
-    expiry = data.get('expiry', '')
-    amount = data.get('amount')
-
-    # असली 2D गेटवे में यहाँ मर्चेंट (जैसे Stripe, Authorize.Net, या कोई इंटरनेशनल मर्चेंट) की API पर बिना OTP के डायरेक्ट हिट मारी जाती है।
-    # सुरक्षा के लिए यहाँ एक बेसिक वैलिडेशन लॉजिक लगाया गया है:
-    if len(card_number) >= 15 and len(cvv) == 3 and '/' in expiry:
-        return jsonify({
-            "status": "SUCCESS",
-            "message": "Charge successful via 2D Gateway",
-            "transaction_id": "TXN_2D_984321074",
-            "amount_charged": amount
-        }), 200
-    else:
-        return jsonify({
-            "status": "FAILED",
-            "message": "Invalid Card Details or 2D Authentication Declined"
-        }), 400
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
